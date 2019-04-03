@@ -67,11 +67,11 @@ def build_model():
 
 model = build_model()
 
-#model.summary()
+model.summary()
 
 example_batch = normed_train_data[:10]
 example_result = model.predict(example_batch)
-#example_result
+example_result
 
 class PrintDot(keras.callbacks.Callback):
   def on_epoch_end(self, epoch, logs):
@@ -87,7 +87,7 @@ history = model.fit(
 
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
-#hist.tail()
+hist.tail()
 
 def plot_history(history):
   hist = pd.DataFrame(history.history)
@@ -112,18 +112,18 @@ def plot_history(history):
            label = 'Val Error')
   plt.ylim([0,20])
   plt.legend()
-  #plt.show()
+  plt.show()
 
 
-#plot_history(history)
+plot_history(history)
 
 model = build_model()
 
 # The patience parameter is the amount of epochs to check for improvement
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
 
-#history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,
- #                   validation_split = 0.2, verbose=0, callbacks=[early_stop, PrintDot()])
+history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,
+                   validation_split = 0.2, verbose=0, callbacks=[early_stop, PrintDot()])
 
 #plot_history(history)
 
