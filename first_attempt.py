@@ -5,7 +5,7 @@ import pathlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-
+import datetime
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -24,10 +24,10 @@ raw_dataset = pd.read_csv(dataset_path, names=column_names,
 
 dataset = raw_dataset.copy()
 
-dataset = dataset[["ASPFWR5", "BDIY", "VIX", "SIM","TOM"]]
+dataset = dataset[["ASPFWR5", "BDIY", "VIX", "SIM","TOM",]]
 dataset = dataset.dropna()
-train_dataset = dataset.sample(frac=0.8,random_state=0)
-test_dataset = dataset.drop(train_dataset.index)
+train_dataset = dataset['20100101':'20170101']
+test_dataset = dataset['20170101':]
 
 
 
@@ -46,8 +46,8 @@ normed_test_data = norm(test_dataset)
 
 def build_model():
   model = keras.Sequential([
-    layers.Dense(64, activation=tf.nn.relu, input_shape=[len(train_dataset.keys())]),
-    layers.Dense(64, activation=tf.nn.relu),
+    layers.Dense(128, activation=tf.nn.relu, input_shape=[len(train_dataset.keys())]),
+    layers.Dense(128, activation=tf.nn.relu),
     layers.Dense(1)
   ])
 
@@ -63,16 +63,13 @@ model = build_model()
 print(model.summary())
 
 
-example_batch = normed_train_data[:10]
-example_result = model.predict(example_batch)
-example_result
 
 class PrintDot(keras.callbacks.Callback):
   def on_epoch_end(self, epoch, logs):
     if epoch % 100 == 0: print('')
     print('.', end='')
 
-EPOCHS = 1000
+EPOCHS = 2000
 
 history = model.fit(
   normed_train_data, train_labels,
@@ -80,6 +77,22 @@ history = model.fit(
   callbacks=[PrintDot()])
 
 
+loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=0)
+
+print("Testing set Mean Abs Error: {:5.2f} MPG".format(mae))
+
+test_predictions = model.predict(normed_test_data).flatten()
+
+plt.scatter(test_labels, test_predictions)
+plt.xlabel('True Values [MPG]')
+plt.ylabel('Predictions [MPG]')
+plt.axis('equal')
+plt.axis('square')
+plt.xlim([0,plt.xlim()[1]])
+plt.ylim([0,plt.ylim()[1]])
+_ = plt.plot([-100, 100], [-100, 100])
+
+plt.show()
 """
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
@@ -124,19 +137,4 @@ history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,
 #plot_history(history)
 """
 
-
-loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=0)
-
-print("Testing set Mean Abs Error: {:5.2f} MPG".format(mae))
-
-test_predictions = model.predict(normed_test_data).flatten()
-
-plt.scatter(test_labels, test_predictions)
-plt.xlabel('True Values [MPG]')
-plt.ylabel('Predictions [MPG]')
-plt.axis('equal')
-plt.axis('square')
-plt.xlim([0,plt.xlim()[1]])
-plt.ylim([0,plt.ylim()[1]])
-_ = plt.plot([-100, 100], [-100, 100])
 
