@@ -174,7 +174,7 @@ for e in range(epochs):
             line2.set_ydata(pred)
             plt.title('Epoch ' + str(e) + ', Batch ' + str(i))
             file_name = 'img/epoch_' + str(e) + '_batch_' + str(i) + '.png'
-            plt.savefig(file_name)
+            plt.savefig('file_name')
             plt.pause(0.01)
 
 
