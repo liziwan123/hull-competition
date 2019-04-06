@@ -18,11 +18,20 @@ if __name__ == '__main__':
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-
+dataset_path = "dataset.csv"
 # Import data
-data = pd.read_csv('data_stocks.csv')
+#data = pd.read_csv('data_stocks.csv')
+column_names = ["ASPFWR5","US10YR","EPS","PER","OPEN","HIGH","LOW","CLOSE","BDIY","VIX","PCR","MVOLE","DXY","ASP","ADVDECL","FEDFUNDS","NYSEADV","IC","BAA","NOS","BER","DVY","PTB","AAA","SI","URR","FOMC","PPIR","RV","LOAN","VVIX","NAPMNEWO","NAPMPRIC","NAPMPMI","US3M","DEL","BBY","HTIME","LTIME","TYVIX","PUC","CRP","TERM","UR","INDPRO","HS","VRP","CAPE","CATY","INF","SIM","TOM","RELINF","DTOM","sentiment1","sentiment2","sentiment3","Hulbert.sentiment"]
+dataset = pd.read_csv(dataset_path, names=column_names,
+                      na_values = "NA", comment='\t',index_col = 0,
+                      parse_dates = True ,sep=",", skipinitialspace=True)
 # Drop date variable
-data = data.drop(['DATE'], 1)
+#data = data.drop(['DATE'], 1)
+#[["ASPFWR5","CLOSE" ,"EPS","PER","TOM","SIM","BDIY", "VIX","FEDFUNDS"]]
+data = dataset.dropna()
+train_dataset = dataset['20120101':'20170101']
+test_dataset = dataset['20170101':]
+
 # Dimensions of dataset
 n = data.shape[0]
 p = data.shape[1]
@@ -33,7 +42,7 @@ data = data.values
 
 # Training and test data
 train_start = 0
-train_end = int(np.floor(0.8*n))
+train_end = int(np.floor(0.95*n))
 test_start = train_end
 test_end = n
 data_train = data[np.arange(train_start, train_end), :]
@@ -64,11 +73,7 @@ b = tf.placeholder(dtype=tf.int8)
 # Define the addition
 c = tf.add(a, b)
 
-# Initialize the graph
-graph = tf.Session()
 
-# Run the graph
-graph.run(c, feed_dict={a: 5, b: 4})
 
 
 
@@ -80,10 +85,10 @@ bias_initializer = tf.zeros_initializer()
 
 
 # Model architecture parameters
-n_stocks = 500
-n_neurons_1 = 1024
-n_neurons_2 = 512
-n_neurons_3 = 256
+n_stocks = p - 1
+n_neurons_1 = 2048
+n_neurons_2 = 1024
+n_neurons_3 = 512
 n_neurons_4 = 128
 n_target = 1
 # Layer 1: Variables for hidden weights and biases
@@ -149,8 +154,8 @@ line2, = ax1.plot(y_test*0.5)
 plt.show()
 
 # Number of epochs and batch size
-epochs = 10
-batch_size = 256
+epochs = 100
+batch_size = 512
 
 for e in range(epochs):
 
@@ -175,7 +180,11 @@ for e in range(epochs):
             plt.title('Epoch ' + str(e) + ', Batch ' + str(i))
             file_name = 'img/epoch_' + str(e) + '_batch_' + str(i) + '.png'
             plt.savefig('file_name')
+<<<<<<< HEAD
+            plt.pause(0.001)
+=======
             plt.pause(0.01)
+>>>>>>> a532657e728ad1861acb61fdebe9aa7271e349a3
 
 
 # Print final MSE after Training
