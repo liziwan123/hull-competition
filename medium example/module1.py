@@ -29,8 +29,7 @@ dataset = pd.read_csv(dataset_path, names=column_names,
 #data = data.drop(['DATE'], 1)
 #[["ASPFWR5","CLOSE" ,"EPS","PER","TOM","SIM","BDIY", "VIX","FEDFUNDS"]]
 data = dataset.dropna()
-train_dataset = dataset['20120101':'20170101']
-test_dataset = dataset['20170101':]
+
 
 # Dimensions of dataset
 n = data.shape[0]
@@ -180,11 +179,7 @@ for e in range(epochs):
             plt.title('Epoch ' + str(e) + ', Batch ' + str(i))
             file_name = 'img/epoch_' + str(e) + '_batch_' + str(i) + '.png'
             plt.savefig('file_name')
-<<<<<<< HEAD
-            plt.pause(0.001)
-=======
             plt.pause(0.01)
->>>>>>> a532657e728ad1861acb61fdebe9aa7271e349a3
 
 
 # Print final MSE after Training
