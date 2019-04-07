@@ -16,26 +16,22 @@ raw_dataset = raw_dataset.dropna()
 dataset = raw_dataset['20100101':'20170101']
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import CuDNNLSTM
 from tensorflow.keras.layers import Dropout
 
-
+train_days = 60
 #Data cleaning
 training_set=dataset[['ASPFWR5',"BDIY","VIX"]]
-dummy = dataset['ASPFWR5']
 training_set=pd.DataFrame(training_set)
-dummy = pd.DataFrame(dummy)
 # Feature Scaling Normalization
 from sklearn.preprocessing import MinMaxScaler
 sc = MinMaxScaler(feature_range = (0, 1))
-sc_y = MinMaxScaler(feature_range= (0,1))
-dummy_scaled = sc_y.fit_transform(dummy)
 training_set_scaled = sc.fit_transform(training_set)
-# Creating a data structure with 60 timesteps and 1 output
+# Creating a data structure with train_days timesteps and 1 output
 X_train = []
 y_train = []
-for i in range(60, 1258):
-    X_train.append(training_set_scaled[i-60:i, :])
+for i in range(train_days,training_set_scaled.shape[0]):
+    X_train.append(training_set_scaled[i-train_days:i, :])
     y_train.append(training_set_scaled[i, 0])
 
 X_train , y_train = np.array(X_train), np.array(y_train)
@@ -45,19 +41,19 @@ X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape
 
 # Initialising the RNN
 regressor = Sequential()
-# Adding the first LSTM layer and some Dropout regularisation
-regressor.add(LSTM(units = 50, return_sequences = True, input_shape = (X_train.shape[1], 3)))
+# Adding the first CuDNNLSTM layer and some Dropout regularisation
+regressor.add(CuDNNLSTM(units = 50, return_sequences = True, input_shape = (X_train.shape[1], 3)))
 regressor.add(Dropout(0.2))
-# Adding a second LSTM layer and some Dropout regularisation
-regressor.add(LSTM(units = 50, return_sequences = True))
-regressor.add(Dropout(0.2))
-
-# Adding a third LSTM layer and some Dropout regularisation
-regressor.add(LSTM(units = 50, return_sequences = True))
+# Adding a second CuDNNLSTM layer and some Dropout regularisation
+regressor.add(CuDNNLSTM(units = 50, return_sequences = True))
 regressor.add(Dropout(0.2))
 
-# Adding a fourth LSTM layer and some Dropout regularisation
-regressor.add(LSTM(units = 50))
+# Adding a third CuDNNLSTM layer and some Dropout regularisation
+regressor.add(CuDNNLSTM(units = 50, return_sequences = True))
+regressor.add(Dropout(0.2))
+
+# Adding a fourth CuDNNLSTM layer and some Dropout regularisation
+regressor.add(CuDNNLSTM(units = 50))
 regressor.add(Dropout(0.2))
 
 # Adding the output layer
@@ -66,32 +62,39 @@ regressor.add(Dense(units = 1))
 regressor.compile(optimizer = 'adam', loss = 'mean_squared_error')
 
 # Fitting the RNN to the Training set
-regressor.fit(X_train, y_train, epochs = 10, batch_size = 32)
+regressor.fit(X_train, y_train, epochs = 100, batch_size = 32)
 
 
 dataset_test = raw_dataset['20170101':]
 real_stock_price = dataset_test.iloc[:, 0].values
 test_set=dataset_test['ASPFWR5']
 test_set=pd.DataFrame(test_set)
+dummy = dataset_test.copy()
+dummy = dummy[['ASPFWR5',"BDIY","VIX"]]
+dummy = sc.transform(dummy)
+dummy = pd.DataFrame(dummy)
 
 # Getting the predicted stock price of 2017
 dataset_total = pd.concat((dataset[['ASPFWR5',"BDIY","VIX"]], dataset_test[['ASPFWR5',"BDIY","VIX"]]), axis = 0)
-inputs = dataset_total[len(dataset_total) - len(dataset_test) - 60:].values
+inputs = dataset_total[len(dataset_total) - len(dataset_test) - train_days:]
 inputs = sc.transform(inputs)
 X_test = []
-for i in range(60, 60+251):
-    X_test.append(inputs[i-60:i, :])
+for i in range(train_days, train_days + test_set.shape[0]):
+    X_test.append(inputs[i-train_days:i, :])
 
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
 predicted_stock_price = regressor.predict(X_test)
-predicted_stock_price = sc_y.inverse_transform(predicted_stock_price)
+dummy[0] = predicted_stock_price
+dummy = sc.inverse_transform(dummy)
+dummy = pd.DataFrame(dummy)
+predicted_stock_price = dummy[0] 
 predicted_stock_price=pd.DataFrame(predicted_stock_price)
 
-plt.plot(real_stock_price, color = 'red', label = 'Real Google Stock Price')
-plt.plot(predicted_stock_price * 10, color = 'blue', label = 'Predicted Google Stock Price')
-plt.title('Google Stock Price Prediction')
+plt.plot(real_stock_price, color = 'red', label = 'Real ASPFWR5')
+plt.plot(predicted_stock_price, color = 'blue', label = 'Predicted ASPFWR5')
+plt.title('ASPFWR5 Prediction')
 plt.xlabel('Time')
-plt.ylabel('Google Stock Price')
+plt.ylabel('ASPFWR5')
 plt.legend()
 plt.show()
