@@ -68,7 +68,7 @@ regressor.fit(X_train, y_train, epochs = 5, batch_size = 32)
 dataset_test = raw_dataset['20170101':]
 test_set=dataset_test['ASPFWR5']
 test_set=pd.DataFrame(test_set)
-
+real_stock_price = dataset_test.iloc[:, 1:2].values
 # Getting the predicted stock price of 2017
 dataset_total = pd.concat((dataset['ASPFWR5'], dataset_test['ASPFWR5']), axis = 0)
 inputs = dataset_total[len(dataset_total) - len(dataset_test) - 60:].values
