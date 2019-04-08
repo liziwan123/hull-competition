@@ -13,7 +13,7 @@ raw_dataset = pd.read_csv(dataset_path, names=column_names,
                       parse_dates = True ,sep=",", skipinitialspace=True)
 
 raw_dataset = raw_dataset.dropna()
-dataset = raw_dataset['20100101':'20170101']
+dataset = raw_dataset['20100101':]
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import CuDNNLSTM
