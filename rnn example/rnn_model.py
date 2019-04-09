@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import datetime
-
+from tensorflow.keras.models import load_model
 dataset_path = "dataset.csv"
 # Import data
 #data = pd.read_csv('data_stocks.csv')
@@ -16,7 +16,7 @@ raw_dataset = raw_dataset.dropna()
 dataset = raw_dataset['20100101':]
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import CuDNNLSTM
+from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Dropout
 
 train_days = 60
@@ -41,19 +41,19 @@ X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape
 
 # Initialising the RNN
 regressor = Sequential()
-# Adding the first CuDNNLSTM layer and some Dropout regularisation
-regressor.add(CuDNNLSTM(units = 50, return_sequences = True, input_shape = (X_train.shape[1], 3)))
+# Adding the first LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50, return_sequences = True, input_shape = (X_train.shape[1], 3)))
 regressor.add(Dropout(0.2))
-# Adding a second CuDNNLSTM layer and some Dropout regularisation
-regressor.add(CuDNNLSTM(units = 50, return_sequences = True))
-regressor.add(Dropout(0.2))
-
-# Adding a third CuDNNLSTM layer and some Dropout regularisation
-regressor.add(CuDNNLSTM(units = 50, return_sequences = True))
+# Adding a second LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50, return_sequences = True))
 regressor.add(Dropout(0.2))
 
-# Adding a fourth CuDNNLSTM layer and some Dropout regularisation
-regressor.add(CuDNNLSTM(units = 50))
+# Adding a third LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50, return_sequences = True))
+regressor.add(Dropout(0.2))
+
+# Adding a fourth LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50))
 regressor.add(Dropout(0.2))
 
 # Adding the output layer
@@ -62,8 +62,8 @@ regressor.add(Dense(units = 1))
 regressor.compile(optimizer = 'adam', loss = 'mean_squared_error')
 
 # Fitting the RNN to the Training set
-regressor.fit(X_train, y_train, epochs = 10, batch_size = 32)
-
+regressor.fit(X_train, y_train, epochs = 200, batch_size = 32)
+regressor.save('model')
 
 dataset_test = raw_dataset['20170101':]
 real_stock_price = dataset_test.iloc[:, 0].values

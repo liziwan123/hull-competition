@@ -59,6 +59,3 @@ for i in range(0,5):
 
 print(predict(get_index(date)))
 
-
-                
-
